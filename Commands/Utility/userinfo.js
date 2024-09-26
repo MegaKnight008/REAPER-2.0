@@ -1,9 +1,9 @@
 const Discord = module.require("discord.js");
 const moment = require("moment");
-const { oneLine } = require("common-tags");
 
 module.exports = {
     name: "userinfo",
+    description: "Get info about your account or mentiobned user's account!",
     aliases: ["ui"],
     run: async (client, message, args) => {
         const permissions = {
@@ -19,12 +19,10 @@ module.exports = {
             "MANAGE_MESSAGES": "Manage Messages",
             "MENTION_EVERYONE": "Mention Everyone"
         }
-        const mention = message.mentions.members.first() || message.member;
+        const mention = message.mentions.members.first();
+        if (!mention) return message.channel.send("Mention someone!")
         const nick = mention.nickname === null ? "None" : mention.nickname;
-        const roles = mention.roles.cache.get === "" ? "None" : mention.roles.cache.get;
         const usericon = mention.user.avatarURL;
-        const act = mention.user.presence.status.toUpperCase();
-        const game = mention.user.presence.game || "None";
         const mentionPermissions = mention.permissions.toArray() === null ? "None" : mention.permissions.toArray();
         const finalPermissions = [];
         for (const permission in permissions) {
@@ -44,23 +42,22 @@ module.exports = {
             "EARLY_SUPPORTER": "Early Supporter",
             "TEAM_USER": "Team User",
             "VERIFIED_BOT": "Verified Bot",
-            "VERIFIED_DEVELOPER": "Verified Bot Developer"
+            "EARLY_VERIFIED_DEVELOPER": "Early Verified Bot Developer"
         };
         var bot = {
             "true": "Yes, The User is a Bot",
             "false": "No, The User is a Human"
         };
-        const userlol = new Discord.MessageEmbed()
-        .setAuthor(`User Info`, mention.user.avatarURL())
-        .setThumbnail(usericon)
-        .addField(`General Info`, `Name: \`${mention.user.username}\` \nTag: \`${mention.user.discriminator}\` \nNickname: \`${nick}\``)
-        .addField(`Overview`, `Badges: \`${flags[mention.user.flags.toArray().join(", ")]}\` \nStatus: \`${act}\` \nActivity: \`${game}\` \nIs Bot: \`${bot[mention.user.bot]}\``)
-        .addField(`Server Relating Info`, `Roles: <@&${mention._roles.join(">  <@&")}> \nKey Permissions: \`${finalPermissions.join(', ')}\``)
-        .addField(`Misc Info`, `Acc Created on: \n\`${moment(mention.user.createdAt).format("dddd, MMMM Do YYYY, h:mm:ss A")}\` \nJoined This Server on: \n\`${moment(mention.joinedAt).format("dddd, MMMM Do YYYY, h:mm:ss A")}\``)
-        .setThumbnail(mention.user.avatarURL())
-        .setFooter(`ID: ${mention.user.id}`, mention.user.avatarURL())
+        const userlol = new Discord.EmbedBuilder()
+        .setTitle(`User Info`)
+        .addFields([
+        { name: `General Info`, value: `Name: \`${mention.user.username}\` \nID:  \`${mention.id}\` \nTag: \`${mention.user.discriminator}\` \nNickname: \`${nick}\``},
+        { name: `Overview`, value: `Badges: \`${flags[mention.user.flags.toArray().join(", ")]}\`\nIs Bot: \`${bot[mention.user.bot]}\``},
+        { name: `Server Relating Info`, value: `Roles: <@&${mention._roles.join(">  <@&")}> \nKey Permissions: \`${finalPermissions.join(', ')}\``},
+        { name: `Misc Info`, value: `Acc Created on: \n\`${moment(mention.user.createdAt).format("dddd, MMMM Do YYYY, h:mm:ss A")}\` \nJoined This Server on: \n\`${moment(mention.joinedAt).format("dddd, MMMM Do YYYY, h:mm:ss A")}\``},
+        ])
         .setTimestamp()
-        .setColor("RANDOM");
-        message.channel.send(userlol)
+        .setColor("Random");
+        message.channel.send({ embeds: [userlol] })
     }
 }

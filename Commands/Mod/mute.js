@@ -1,53 +1,61 @@
-const { MessageEmbed } = module.require("discord.js");
+const { Client, Message, EmbedBuilder } = require('discord.js');
+const ms = require('ms')
 
-module.exports= {
-	name: "mute",
-	description:"Mute members in one shot",
-	category:"moderation",
-	usage: "=mute <@user> <reason >",
-	run: async(client, message, args) => {
+module.exports = {
+    name: 'mute',
+    description: 'Mutes the specified user.',
+    usage: 'Mute @user [time] [reason]',
+    /**
+     * @param {Client} client
+     * @param {Message} message
+     * @param {String[]} args
+     */
+    run: async (client, message, args, Discord) => {
 
-    if(!message.member.hasPermission("MANAGE_ROLES")) {
-		return message.channel.send(`**${message.author.username}**, You do not have enough permission to use this command`)
-	}
+        const member = message.mentions.members.first();
+        let time = args[1];
+        const reason = args.slice(2).join(' ');
+        const role = message.guild.roles.cache.find(role => role.name === 'Muted')
 
-	if (!message.guild.me.hasPermission("MANAGE_ROLES")) {
-		return message.channel.send(`**${message.author.username}**, I do not have enough Permissions`)	
-	}
-	const user = message.mentions.members.first();
+        if (!member) return message.reply('Mention a user!');
+        if (!time) return message.reply('Tell the time!');
+        if (!reason) return message.reply('Tell me a reason');
 
-	if (!user) {
-		return message.channel.send(`**${message.author.username}**, Please mention the member who you want to mute`)
-	}
+        if (member.id === message.author.id) return message.reply('You cant mute your self!')
+        if (member.id === client.id) return message.reply('You cant mute me!')
 
-	if(user.id === message.guild.owner.id) {
-	    return message.channel.send("You cannot mute the Server Owner")
-	}
-	 
-	if (user.id === message.author.id) {
-		return message.channel.send(`**${message.author.username}**, You can't mute yourself`)
-	}
+        if (!role) {
+            try {
+                message.channel.send('No muted role.. making one..!')
+                let muterole = await message.guild.roles.create({
+                    name: 'Muted',
+                });
+                message.guild.channels.cache.forEach(async (channel) => {
+                    await channel.permissionOverwrites.create(muterole, { SendMessages: false, AddReactions: false});
+                });
+                const embed = new EmbedBuilder()
+                    .setDescription('Muted role has sucessfully been created')
+                    .setColor("Green")
+                await message.channel.send({ embeds: [embed] });
+            } catch (error) {
+                console.log(error)
+            }
+        };
+        let role2 = message.guild.roles.cache.find(role => role.name === 'Muted')
+        if (member.roles.cache.has(role2)) return message.reply('User is already muted! ')
 
-	let reason = args.slice(1).join(" ")
-	
-	let muterole = message.guild.roles.cache.find(x => x.name === "Muted")
+        if (member.roles.highest.position >= message.member.roles.highest.position) return message.reply('You cant mute this user')
 
-	if(!muterole) {
-		return message.channel.send("This Server has no role named as `Muted`")
-	}
 
-	if (user.roles.cache.has(muterole)) {
-		return message.channel.send(`Given User is already muted`)
-	}
+        await member.roles.add(role2)
+        message.channel.send(`${member.user.username} has been muted for ${ms(ms(time))}, Reason: ${reason}`)
 
-	user.roles.add(muterole)
+        setTimeout(() => {
+            member.roles.remove(role2)
+        }, ms(time))
 
-	const embed = new MessageEmbed()
-	.setTitle("Muted!")
-	.setColor("RANDOM")
-	.setDescription(
-		`Action: Muted \nUser:${user} \nReason: ${reason} \nModerator: ${message.member} `
-	);
-	message.channel.send(embed);
+    }
+
+
+
 }
-};

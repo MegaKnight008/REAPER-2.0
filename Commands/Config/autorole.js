@@ -1,21 +1,17 @@
-const Discord = module.require("discord.js")
+
 const roleData = require("../../database/guildData/autorole");
 
 module.exports = {
   name: "autorole",
   description: "Change autorole per server!",
-  permissions: "MANAGE_ROLES",
-  botPermissions: "MANAGE_ROLES",
   args: "Yes",
   usage: "!autorole <Role|off>",
   aliases: ["ar", "joinrole"],
+  userPerms: ["ManageRoles"],
+  botPerms: ["ManageRoles"],
+
   run: async (client, message, args) => {
-    if (!message.member.hasPermission("MANAGE_ROLES")) {
-     return message.channel.send("You dont have enough Permissions!")
-    }
-    if (!message.guild.me.hasPermission("MANAGE_ROLES")) {
-      return message.channel.send("I Don't have the `Manage Roles` Permission, required for Autorole!")
-     }
+   
     if (!args[0]) {
       return message.channel.send(`\`Usage: ${message.client.prefix}autorole <@role|off>\``)
     }

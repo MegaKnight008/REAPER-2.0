@@ -1,38 +1,23 @@
-const { MessageEmbed } = module.require("discord.js");
+const { Client, Message, EmbedBuilder } = require('discord.js');
 
-module.exports= {
-	name: "unmute",
-	description:"Unmute members in one shot",
-	category:"moderation",
-	usage: "=ummute <@user> <reason >",
-	run: async(client, message, args) => {
+module.exports = {
+    name: 'unmute',
+    description: 'Unmutes the specified user.',
+    usage: '',
+    /**
+     * @param {Client} client
+     * @param {Message} message
+     * @param {String[]} args
+     */
+    run: async (client, message, args, Discord) => {
 
-    if(!message.member.hasPermission("MANAGE_ROLES")) {
-		return message.channel.send(`**${message.author.username}**, You do not have enough permission to use this command`)
-	}
+        const member = message.mentions.members.first();
+        let target = message.guild.members.cache.get(member.id)
+        const role = message.guild.roles.cache.find(role => role.name === 'Muted')
 
-	if (!message.guild.me.hasPermission("MANAGE_ROLES")) {
-		return message.channel.send(`**${message.author.username}**, I do not have enough Permissions`)	
-	}
-	const user = message.mentions.members.first();
+        target.roles.remove(role.id);
+        message.reply('Unmuted!')
 
-	if (!user) {
-        return message.channel.send(`**${message.author.username}**, Please mention the member who you want to unmute`)
+
     }
-    
-    let muterole = message.guild.roles.cache.find(x => x.name === "Muted")
-
-    if (user.roles.cache.has(muterole)) {
-		return message.channel.send(`Given User is not muted`)
-    }
-    user.roles.remove(muterole)
-
-    const embed = new MessageEmbed()
-    .setTitle("Unmute")
-    .setColor("RANDOM")
-    .setDescription(
-        `User Unmuted: ${user} \nUnmuted by: ${message.member}`
-    );
-    message.channel.send(embed);
 }
-};
